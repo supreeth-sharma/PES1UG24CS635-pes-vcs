@@ -161,6 +161,7 @@ if (object_write(OBJ_TREE, data, len, id_out) != 0) {
     free(data);
     return -1;
 }
+free(data);
 
-    return -1;
+return 0;
 }
