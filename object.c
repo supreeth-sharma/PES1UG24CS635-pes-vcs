@@ -171,7 +171,32 @@ if (dirfd >= 0) {
 // The caller is responsible for calling free(*data_out).
 // Returns 0 on success, -1 on error (file not found, corrupt, etc.).
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out) {
-    // TODO: Implement
+char path[512];
+object_path(id, path, sizeof(path));
+
+FILE *f = fopen(path, "rb");
+if (!f) return -1;
+
+fseek(f, 0, SEEK_END);
+size_t size = ftell(f);
+rewind(f);
+char *buffer = malloc(size);
+fread(buffer, 1, size, f);
+fclose(f);
+ObjectID computed;
+compute_hash(buffer, size, &computed);
+
+if (memcmp(computed.hash, id->hash, HASH_SIZE) != 0) {
+    free(buffer);
+    return -1;
+}
+char *null_pos = memchr(buffer, '\0', size);
+char *data_start = null_pos + 1;
+*data_out = malloc(data_size);
+memcpy(*data_out, data_start, data_size);
+*len_out = data_size;
+
+
     (void)id; (void)type_out; (void)data_out; (void)len_out;
     return -1;
 }
