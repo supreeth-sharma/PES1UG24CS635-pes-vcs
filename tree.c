@@ -15,6 +15,8 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include "index.h"
+#include "pes.h"
 
 // ─── Mode Constants ─────────────────────────────────────────────────────────
 
@@ -131,27 +133,8 @@ int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
 // Returns 0 on success, -1 on error.
 int tree_from_index(ObjectID *id_out) {
 
-    Index index;
-
-    if (index_load(&index) != 0) {
-        return -1;
-    }
-
     Tree tree;
     tree.count = 0;
-
-    for (size_t i = 0; i < index.count; i++) {
-
-        TreeEntry *entry = &tree.entries[tree.count];
-
-        entry->mode = index.entries[i].mode;
-        entry->hash = index.entries[i].id;
-
-        strncpy(entry->name, index.entries[i].path, sizeof(entry->name) - 1);
-        entry->name[sizeof(entry->name) - 1] = '\0';
-
-        tree.count++;
-    }
 
     void *data;
     size_t len;
