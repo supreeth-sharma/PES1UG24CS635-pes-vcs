@@ -29,34 +29,6 @@
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out);
 
-const char *author = pes_author();
-uint64_t timestamp = (uint64_t)time(NULL);
-
-snprintf(commit.author, sizeof(commit.author), "%s", author);
-commit.timestamp = timestamp;
-
-snprintf(commit.message, sizeof(commit.message), "%s", message);
-
-void *data;
-size_t len;
-
-if (commit_serialize(&commit, &data, &len) != 0) {
-    return -1;
-}
-
-if (object_write(OBJ_COMMIT, data, len, commit_id_out) != 0) {
-    free(data);
-    return -1;
-}
-
-free(data);
-
-if (head_update(commit_id_out) != 0) {
-    return -1;
-}
-
-return 0;
-}
 
 // ─── PROVIDED ────────────────────────────────────────────────────────────────
 
@@ -229,18 +201,49 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     Commit commit;
     memset(&commit, 0, sizeof(commit));
 
+    /* 1. Build tree from current index */
     if (tree_from_index(&commit.tree) != 0) {
         return -1;
     }
 
-    return -1;
-}
+    /* 2. Read parent commit if it exists */
+    ObjectID parent;
+    if (head_read(&parent) == 0) {
+        commit.parent = parent;
+        commit.has_parent = 1;
+    } else {
+        commit.has_parent = 0;
+    }
 
-ObjectID parent;
+    /* 3. Fill author + timestamp + message */
+    const char *author = pes_author();
+    uint64_t timestamp = (uint64_t)time(NULL);
 
-if (head_read(&parent) == 0) {
-    commit.parent = parent;
-    commit.has_parent = 1;
-} else {
-    commit.has_parent = 0;
+    snprintf(commit.author, sizeof(commit.author), "%s", author);
+    commit.timestamp = timestamp;
+
+    snprintf(commit.message, sizeof(commit.message), "%s", message);
+
+    /* 4. Serialize commit */
+    void *data;
+    size_t len;
+
+    if (commit_serialize(&commit, &data, &len) != 0) {
+        return -1;
+    }
+
+    /* 5. Write commit object */
+    if (object_write(OBJ_COMMIT, data, len, commit_id_out) != 0) {
+        free(data);
+        return -1;
+    }
+
+    free(data);
+
+    /* 6. Update HEAD reference */
+    if (head_update(commit_id_out) != 0) {
+        return -1;
+    }
+
+    return 0;
 }
