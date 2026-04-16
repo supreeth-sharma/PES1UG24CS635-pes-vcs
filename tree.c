@@ -139,29 +139,33 @@ int tree_from_index(ObjectID *id_out) {
 
     Tree tree;
     tree.count = 0;
-for (size_t i = 0; i < index.count; i++) {
 
-    TreeEntry *entry = &tree.entries[tree.count];
+    for (size_t i = 0; i < index.count; i++) {
 
-    entry->mode = index.entries[i].mode;
-    entry->hash = index.entries[i].id;
+        TreeEntry *entry = &tree.entries[tree.count];
 
-    strncpy(entry->name, index.entries[i].path, sizeof(entry->name) - 1);
-    entry->name[sizeof(entry->name) - 1] = '\0';
+        entry->mode = index.entries[i].mode;
+        entry->hash = index.entries[i].id;
 
-    tree.count++;
-}
-void *data;
-size_t len;
+        strncpy(entry->name, index.entries[i].path, sizeof(entry->name) - 1);
+        entry->name[sizeof(entry->name) - 1] = '\0';
 
-if (tree_serialize(&tree, &data, &len) != 0) {
-    return -1;
-}
-if (object_write(OBJ_TREE, data, len, id_out) != 0) {
+        tree.count++;
+    }
+
+    void *data;
+    size_t len;
+
+    if (tree_serialize(&tree, &data, &len) != 0) {
+        return -1;
+    }
+
+    if (object_write(OBJ_TREE, data, len, id_out) != 0) {
+        free(data);
+        return -1;
+    }
+
     free(data);
-    return -1;
-}
-free(data);
 
-return 0;
+    return 0;
 }
