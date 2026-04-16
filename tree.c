@@ -151,6 +151,12 @@ for (size_t i = 0; i < index.count; i++) {
 
     tree.count++;
 }
+void *data;
+size_t len;
+
+if (tree_serialize(&tree, &data, &len) != 0) {
+    return -1;
+}
 
     return -1;
 }
