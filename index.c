@@ -266,3 +266,5 @@ int index_add(Index *index, const char *path) {
 
     return index_save(index);
 }
+
+//no output is available for ./pes
