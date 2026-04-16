@@ -29,6 +29,14 @@
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out);
 
+const char *author = pes_author();
+uint64_t timestamp = (uint64_t)time(NULL);
+
+snprintf(commit.author, sizeof(commit.author), "%s", author);
+commit.timestamp = timestamp;
+
+snprintf(commit.message, sizeof(commit.message), "%s", message);
+
 // ─── PROVIDED ────────────────────────────────────────────────────────────────
 
 // Parse raw commit data into a Commit struct.
